@@ -207,6 +207,7 @@ let searchQuery  = '';
 function renderGrid() {
     const grid = document.getElementById('projectGrid');
     const noResults = document.getElementById('noResults');
+    const paginationContainer = document.getElementById('pagination');
     if (!grid) return;
 
     const filtered = PROJECTS.filter(([day, name, , , cat]) => {
@@ -221,13 +222,23 @@ function renderGrid() {
     if (filtered.length === 0) {
         grid.style.display = 'none';
         noResults.style.display = 'block';
+        if (paginationContainer) paginationContainer.style.display = 'none';
         return;
     }
 
     grid.style.display = 'grid';
     noResults.style.display = 'none';
+    if (paginationContainer) paginationContainer.style.display = 'flex';
 
-    filtered.forEach(([day, name, url, tags, cat]) => {
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    const endIdx = startIdx + itemsPerPage;
+    const pagedItems = filtered.slice(startIdx, endIdx);
+
+    pagedItems.forEach(([day, name, url, tags, cat]) => {
         const card = document.createElement('div');
         card.className = 'project-card';
 
@@ -249,11 +260,67 @@ function renderGrid() {
 
         grid.appendChild(card);
     });
+
+    renderPagination(totalPages);
 }
 
-/* ============================================================
-   FILTER CHIPS
-   ============================================================ */
+function renderPagination(totalPages) {
+    const paginationContainer = document.getElementById('pagination');
+    if (!paginationContainer) return;
+
+    paginationContainer.innerHTML = '';
+
+    if (totalPages <= 1) {
+        paginationContainer.style.display = 'none';
+        return;
+    }
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'btn btn-ghost pagination-btn';
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderGrid();
+            document.getElementById('projects').scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+    paginationContainer.appendChild(prevBtn);
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = `btn btn-ghost pagination-btn ${i === currentPage ? 'active' : ''}`;
+            pageBtn.textContent = i;
+            pageBtn.addEventListener('click', () => {
+                currentPage = i;
+                renderGrid();
+                document.getElementById('projects').scrollIntoView({ behavior: 'smooth' });
+            });
+            paginationContainer.appendChild(pageBtn);
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'pagination-ellipsis';
+            ellipsis.textContent = '...';
+            paginationContainer.appendChild(ellipsis);
+        }
+    }
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'btn btn-ghost pagination-btn';
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderGrid();
+            document.getElementById('projects').scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+    paginationContainer.appendChild(nextBtn);
+}
+
 function initFilterChips() {
     const chips = document.querySelectorAll('.chip[data-filter]');
     chips.forEach(chip => {
@@ -261,19 +328,18 @@ function initFilterChips() {
             chips.forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
             activeFilter = chip.dataset.filter;
+            currentPage = 1; // Reset to page 1 on filter
             renderGrid();
         });
     });
 }
 
-/* ============================================================
-   LIVE SEARCH
-   ============================================================ */
 function initSearch() {
     const input = document.getElementById('searchInput');
     if (!input) return;
     input.addEventListener('input', () => {
         searchQuery = input.value.trim();
+        currentPage = 1; // Reset to page 1 on search
         renderGrid();
     });
 }
@@ -360,7 +426,7 @@ function initTheme() {
     });
 }
 let currentPage = 1;
-const itemsPerPage = 10;
+const itemsPerPage = 12; // Use 12 for better grid alignment
 let projectData = [];
 
 /* ============================================================
