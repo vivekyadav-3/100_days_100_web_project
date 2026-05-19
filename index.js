@@ -132,6 +132,7 @@ const PROJECTS = [
     ["Day 116", "AI Image Classifier",                 "./public/AI Image Classifier/index.html",                                                                        ["HTML","CSS","JS","AI"], "tool"],
     ['Day 117', 'Habit Tracker Web App', './public/Habit-Tracker-Web-App/index.html'],
     ["Day 118", "Glassmorphism Pomodoro Timer", "./public/Glassmorphism-Pomodoro/index.html", ["HTML","CSS","JS"], "tool"],
+    ["Day 119", "AI Voice Assistant UI", "./public/AI_Voice_Assistant_UI/index.html", ["HTML","CSS","JS"], "ui"],
 ];
 
 const CATEGORY_LABEL = {
